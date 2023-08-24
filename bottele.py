@@ -3,7 +3,7 @@ import RPi.GPIO as GPIO
 import time
 import os
 import requests
-
+https://www.survivingwithandroid.com/telegram-bot-raspberry-pi-camera/
 #tele
 TOKEN = '6468751727:AAEmiqH6zFYN8cV6xHPGhkKwjySeU1LSfvM'
 chat_id = 6393037362  #chat id pengguna
