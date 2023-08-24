@@ -5,10 +5,10 @@ import os
 import requests
 
 #tele
-TOKEN = 'TOKEN BOT'
-chat_id = 123123123   #chat id pengguna
+TOKEN = '6468751727:AAEmiqH6zFYN8cV6xHPGhkKwjySeU1LSfvM'
+chat_id = 6393037362  #chat id pengguna
 image_name = os.getcwd() + "/" + "img.jpg"
-list_chat_id = ["123123123"]#chat id pengguna
+list_chat_id = ["6393037362"]#chat id pengguna
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setup (23, GPIO.IN) #set pin sensor sentuh
