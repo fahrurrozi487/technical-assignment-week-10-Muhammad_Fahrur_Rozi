@@ -4,10 +4,10 @@ import picamera
 import telepot
 
 # Replace 'YOUR_BOT_TOKEN' with your actual Telegram Bot API token
-TELEGRAM_BOT_TOKEN = 'YOUR_BOT_TOKEN'
+TELEGRAM_BOT_TOKEN = '6042159900:AAFFx5fpvbbgR1eYfTjgW7DRxqn0b9VzA5A'
 
 # Replace 'YOUR_CHAT_ID' with your actual Telegram chat ID
-TELEGRAM_CHAT_ID = 'YOUR_CHAT_ID'
+TELEGRAM_CHAT_ID = '6393037362'
 
 # Initialize the Telegram Bot
 bot = telepot.Bot(TELEGRAM_BOT_TOKEN)
