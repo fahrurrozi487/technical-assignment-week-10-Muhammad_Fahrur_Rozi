@@ -1,2 +1,3 @@
 https://github.com/anggasetiawanw/sic4-mentoring.git
 6042159900:AAFFx5fpvbbgR1eYfTjgW7DRxqn0b9VzA5A
+R3_REGISTRATION_CODE="41B9007E-1A4B-5B6E-9623-27FAFB38C980" sh -c "$(curl -L https://downloads.remote.it/remoteit/install_agent.sh)"
