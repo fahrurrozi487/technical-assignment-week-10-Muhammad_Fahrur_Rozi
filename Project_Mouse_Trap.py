@@ -61,7 +61,7 @@ def ultrasonik():
     while GPIO.input(echo_pin) == GPIO.HIGH:
         pulse_end_time = time.time()
 #
-    pulse_duration = pulse_end_time - pulse_start_time
+    pulse_duration = pulse_end_time-pulse_start_time
 
     distance_cm = (pulse_duration * 34300) / 2
     distance_cm = round(distance_cm, 2)
@@ -82,7 +82,7 @@ def ultrasonik2():
     while GPIO.input(echo_pin2) == GPIO.HIGH:
         pulse_end_time = time.time()
 #
-    pulse_duration = pulse_end_time - pulse_start_time
+    pulse_duration = pulse_end_time-pulse_start_time
 
     distance_cm = (pulse_duration * 34300) / 2
     distance_cm = round(distance_cm, 2)
@@ -103,7 +103,7 @@ def ultrasonik3():
     while GPIO.input(echo_pin3) == GPIO.HIGH:
         pulse_end_time = time.time()
 #
-    pulse_duration = pulse_end_time - pulse_start_time
+    pulse_duration = pulse_end_time-pulse_start_time
 
     distance_cm = (pulse_duration * 34300) / 2
     distance_cm = round(distance_cm, 2)
@@ -166,29 +166,30 @@ while 1:
     payload = {"ultrasonik1": ultrasonic_value,
                "ultrasonik2": ultrasonic_value2,
                "ultrasonik3": ultrasonic_value3,
+               "tikus": count_tikus,
                }
-    client.publish("/v1.6/devices/" + DEVICE_LABEL, json.dumps(payload), qos=1)
+    client.publish("/v1.6/devices/" + DEVICE_LABEL, json.dumps(payload), qos=0)
     #time.sleep(1)
-    if ultrasonic_value >50 :
-        metadata = get_camera()
+    if ultrasonic_value <23 :
+        #metadata = get_camera()
         counter_sensor = 0
-        print(metadata)
+        #print(metadata)
         chat_id = 6393037362
-        bot.sendPhoto(chat_id, open(path + '/Downloads/prediction.jpg', 'rb'))
+        #bot.sendPhoto(chat_id, open(path + '/Downloads/prediction.jpg', 'rb'))
         count_tikus = count_tikus + 1
         bot.sendMessage(chat_id, str(f"Sensor 1 Mendeteksi, Tikus Masuk Perangkap {count_tikus}"))
-    if ultrasonic_value2 >50 :
-        metadata = get_camera()
-        print(metadata)
+    if ultrasonic_value2 <23 :
+        #metadata = get_camera()
+        #print(metadata)
         chat_id = 6393037362
-        bot.sendPhoto(chat_id, open(path + '/Downloads/prediction.jpg', 'rb'))
+        #bot.sendPhoto(chat_id, open(path + '/Downloads/prediction.jpg', 'rb'))
         count_tikus = count_tikus + 1
         bot.sendMessage(chat_id, str(f"Sensor 2 Mendeteksi, Tikus Masuk Perangkap: {count_tikus}"))
-    if ultrasonic_value3 >50 :
-        metadata = get_camera()
-        print(metadata)
+    if ultrasonic_value3 <23 :
+        #metadata = get_camera()
+        #print(metadata)
         chat_id = 6393037362
-        bot.sendPhoto(chat_id, open(path + '/Downloads/prediction.jpg', 'rb'))
+        #bot.sendPhoto(chat_id, open(path + '/Downloads/prediction.jpg', 'rb'))
         count_tikus = count_tikus + 1
         bot.sendMessage(chat_id, str(f"Sensor 3 Mendeteksi, Tikus Dalam Perangkap: {count_tikus}"))
-    time.sleep(0.5)
+    time.sleep(1)
