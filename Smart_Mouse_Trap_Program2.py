@@ -16,7 +16,9 @@ import socket
 rf = Roboflow(api_key="wjIbFI5jUqWpxDPE9U8j")
 project = rf.workspace().project("pendeteksi-tikus-rumah-xqpyq")
 model = project.version(1).model
-
+sensor1 = 0
+sensor2 = 0
+sensor3 = 0
 UBIDOTS_TOKEN = "BBFF-eFMbNcrOkgjt0ITr7RPNXYU71mzBy1"
 DEVICE_LABEL = "lokaping"
 
@@ -143,8 +145,8 @@ def handle(msg):
     elif command == '/BUZZEROFF':
         bot.sendMessage(chat_id, str("Buzzer Mati"))
         GPIO.output(buzzer, GPIO.LOW)
-    elif command == '/CEK':
-        bot.sendMessage(chat_id, str(f"Tikus dalam perangkap :{jumlah_tikus}"))
+    elif command == "/CEK":
+        bot.sendMessage(chat_id, str(f"tikus dalam perangkap{jumlah_tikus}"))
 
 bot = telepot.Bot('6042159900:AAFFx5fpvbbgR1eYfTjgW7DRxqn0b9VzA5A')
 print (bot.getMe())
@@ -164,15 +166,11 @@ def get_camera():
     kamera.close()
     model.predict('pic.jpg', confidence=40, overlap=30).save("prediction.jpg")
     return metadata
-sensor1 = 0
-sensor2 = 0
-sensor3 = 0
+
 while 1:
     ultrasonic_value = ultrasonik()
     ultrasonic_value2 = ultrasonik2()
     ultrasonic_value3 = ultrasonik3()
-    if check_network():
-        bot.sendMessage(chat_id, str("Internet Connected"))
     if ultrasonic_value <23 :
         sensor1 = sensor1 + 1
         metadata = get_camera()
@@ -194,6 +192,7 @@ while 1:
         chat_id = 6393037362
         bot.sendPhoto(chat_id, open(path + '/Downloads/prediction.jpg', 'rb'))
         bot.sendMessage(chat_id, str(f"Sensor 3 Mendeteksi {sensor3} tikus"))
+
     jumlah_tikus = sensor1 + sensor2 + sensor3
     payload = {"ultrasonik1": sensor1,
                "ultrasonik2": sensor2,
