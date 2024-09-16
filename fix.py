@@ -6,6 +6,9 @@ import random
 from lcd import drivers
 import Adafruit_DHT
 import pyrebase
+import spidev
+
+# Fungsi untuk menginisialisasi SPI
 
 servo = 21
 buzzerr = 26
@@ -49,11 +52,37 @@ firebase_config = {
 firebase = pyrebase.initialize_app(firebase_config)
 db = firebase.database()
 
+def init_spi():
+    spi = spidev.SpiDev()
+    spi.open(0, 0)
+    spi.max_speed_hz = 1350000
+    return spi
+
+# Fungsi untuk membaca data dari channel MCP3008
+def read_channel(spi, channel):
+    adc = spi.xfer2([1, (8 + channel) << 4, 0])
+    data = ((adc[1] & 3) << 8) + adc[2]
+    return data
+
+# Fungsi untuk mengkonversi nilai ADC ke voltase
+def convert_volts(adc_value, vref=3.3):
+    return (adc_value * vref) / 1024.0
+
+# Fungsi untuk menghitung pH dari voltase
+def calculate_ph(voltage):
+    # Slope (m) dan Intercept (b) dari kalibrasi
+    m = 1.07
+    b = 3.79
+    # Menghitung pH berdasarkan voltase
+    ph = m * voltage + b
+    return ph
+
 def read_dht11():
     humidity, temperature = Adafruit_DHT.read(DHT_SENSOR, dht)
     if humidity is not None and temperature is not None:
         pompa_on(humidity)
         kipas_on(temperature)
+        ket_suhu(temperature)
         return temperature, humidity
 
     else:
@@ -63,24 +92,26 @@ def read_dht11():
     #return  temperature, humidity
 
 def read_ph():
-    value_ph=random.randint(1,15)
-    pengaduk_on(value_ph)
-    display.lcd_display_string(f"P:{value_ph:.2f}           ",2)
-    # Fungsi ini bergantung pada bagaimana sensor pH terhubung dan berkomunikasi
-    # Misalnya membaca dari port serial
-    #ph_serial.flushInput()
-    #line = ph_serial.readline().decode('ascii').strip()
-    #try:
-        #ph_value = float(line)
-        #return ph_value
-    #except ValueError:
-        #return None
-    return value_ph
+    spi = init_spi()
+    ph_channel = 0  # Channel MCP3008 yang terhubung ke sensor pH
+            # Membaca nilai ADC dari channel sensor pH
+    adc_value = read_channel(spi, ph_channel)
+            # Mengkonversi nilai ADC ke voltase
+    voltage = convert_volts(adc_value)
+            # Menghitung pH dari voltase
+    ph_value = calculate_ph(voltage)+ 2.2
+    keterangan_ph(ph_value)
+    pengaduk_on(ph_value)
+            # Menampilkan nilai voltase dan pH
+    print(f"Voltage: {voltage:.2f}V, pH: {ph_value:.2f}")
+    
+    return ph_value
 
 def read_sensor():
     temp, humidity = read_dht11()
     ph = read_ph()
-    display.lcd_display_string(f"H:{humidity:.2f} T:{temp:.2f}")
+    display.lcd_display_string(f"H:{str(humidity)} T:{str(temp)}", 1)
+    display.lcd_display_string(f"P:{ph:.2f}           ",2)
     return {'temp': temp, 'humidity': humidity, 'ph': ph}
 
 def calculate_average(data, resample_rule):
@@ -94,19 +125,35 @@ def upload_to_firebase(path, data):
 
 def pompa_on(yak):
     global pompa, keterangan_kelembaban
-    if yak >= 50:
-        pompa=1
+    if yak > 50:
+        pompa=0
         keterangan_kelembaban=2
-        GPIO.output(pompaa, True)
+        GPIO.output(pompaa, False)
     elif yak>=40 and yak<50:
         pompa=0
         keterangan_kelembaban=1
         GPIO.output(pompaa, False) 
     else:
-        pompa=0
+        pompa=1
         keterangan_kelembaban=0
-        GPIO.output(pompaa, False)
-        
+        GPIO.output(pompaa, True)
+
+def ket_suhu(pak):
+    global keterangan_suhu
+    if pak>=30:
+        keterangan_suhu=2
+    elif pak<30 and pak>=29:
+        keterangan_suhu=1
+    else:
+        keterangan_suhu=0
+def keterangan_ph(ph):
+    global ket_ph
+    if ph>=7.5:
+        ket_ph=2
+    elif ph>6.5 and ph<7.5:
+        ket_ph=1
+    else:
+        ket_ph=0      
 def kipas_on(yosh):
     global kipas, keterangan_suhu
     if yosh >=30:
@@ -119,25 +166,22 @@ def kipas_on(yosh):
         GPIO.output(kipass, False)
                  
 def pengaduk_on(val):
-    global buzzer, pengaduk, keterangan_ph
-    if val <10:
+    global buzzer, pengaduk
+    if val>6:
         buzzer=1
         pengaduk=1
-        keterangan_ph=2
         pwm.ChangeDutyCycle(12)
-        GPIO.output(buzzerr, True)
         time.sleep(1)
+        GPIO.output(buzzerr, True)
         pwm.ChangeDutyCycle(2)
     elif val>4 and val<6:
         buzzer=0
         pengaduk=0
-        keterangan_ph=1
         pwm.ChangeDutyCycle(2)
         GPIO.output(buzzerr, False)
     else:
         buzzer=0
         pengaduk=0
-        keterangan_ph=0
         pwm.ChangeDutyCycle(2)
         GPIO.output(buzzerr, False)
 
@@ -162,16 +206,16 @@ def main():
             
             # Kirim data sensor langsung ke Firebase
             if sensor_data['temp'] is not None:
-                db.child('data_sensor/').set({'suhu': sensor_data['temp']})
+                db.child('data_sensor/suhu/').set({'suhu': sensor_data['temp']})
             if sensor_data['humidity'] is not None:
-                db.child('data_sensor/').set({'kelembaban': sensor_data['humidity']})
+                db.child('data_sensor/kelembaban/').set({'kelembaban': sensor_data['humidity']})
             if sensor_data['ph'] is not None:
-                db.child('data_sensor/').set({'ph': sensor_data['ph']})
+                db.child('data_sensor/ph/').set({'ph': sensor_data['ph']})
             
             db.child('data_keterangan/').set({
                 'keterangan_suhu':keterangan_suhu,
                 'keterangan_kelembaban':keterangan_kelembaban,
-                'keterangan_ph':keterangan_ph
+                'keterangan_ph':ket_ph
             })
             
             db.child('data_kontrol/').set({
